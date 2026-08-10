@@ -1,11 +1,13 @@
+import time
+
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_openai import ChatOpenAI
+
 from app.config import Config
-from app.tools import ALL_TOOLS
+from app.llm import FallbackLLM
 from app.memory.store import MemoryStore
 from app.rag.retriever import RAGRetriever
-import time
+from app.tools import ALL_TOOLS
 
 PROMPT = ChatPromptTemplate.from_messages([
     ("system", "You are a helpful AI assistant. Answer in Russian. Use tools when you need real data."),
@@ -17,13 +19,7 @@ PROMPT = ChatPromptTemplate.from_messages([
 
 class Agent:
     def __init__(self):
-        self.llm = ChatOpenAI(
-            base_url=Config.openrouter_base,
-            api_key=Config.openrouter_key,
-            model=Config.primary_model,
-            temperature=0.7,
-            default_headers={"HTTP-Referer": "localhost", "X-Title": "AI Agent"},
-        )
+        self.llm = FallbackLLM()
         self.tools = ALL_TOOLS
         self.memory = MemoryStore()
         self.rag = RAGRetriever()
@@ -63,6 +59,13 @@ class Agent:
             if not msg: continue
             if msg in ("выход", "exit"): print("👋"); break
             if msg == "/clear": self.clear(); print("✅"); continue
+            if msg.startswith("/model ") or msg.startswith("переключись на модель "):
+                new_model = msg[7:].strip()
+                if self.llm.switch_model(new_model):
+                    print(f"✅ Модель: {new_model}")
+                else:
+                    print("❌ Не удалось переключить модель")
+                continue
             if msg.startswith("/index"):
                 n = self.index(msg[7:].strip() or "bookmarks.html")
                 print(f"✅ {n} закладок");

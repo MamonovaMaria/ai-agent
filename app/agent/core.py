@@ -23,24 +23,38 @@ class Agent:
         self.tools = ALL_TOOLS
         self.memory = MemoryStore()
         self.rag = RAGRetriever()
+        self.executor = self._create_executor()
 
+    def _create_executor(self):
+        print(f"DEBUG _create_executor: llm.model = {self.llm.model}")
         agent = create_tool_calling_agent(self.llm, self.tools, PROMPT)
-        self.executor = AgentExecutor(
-            agent=agent,
-            tools=self.tools,
-            memory=self.memory.memory,
-            verbose=Config.verbose,
-            handle_parsing_errors=True,
-            max_iterations=Config.max_iterations,
-            max_execution_time=120,
+        return AgentExecutor(
+            agent=agent, tools=self.tools, memory=self.memory.memory,
+            verbose=Config.verbose, handle_parsing_errors=True,
+            max_iterations=Config.max_iterations, max_execution_time=120,
         )
 
     def chat(self, message: str) -> dict:
         start = time.time()
         rag_ctx = self.rag.context(message)
         full_input = f"{rag_ctx}\n\n{message}" if rag_ctx else message
-        result = self.executor.invoke({"input": full_input})
-        return {"response": result["output"], "duration": time.time() - start}
+
+        try:
+            result = self.executor.invoke({"input": full_input})
+            return {"response": result["output"], "duration": time.time() - start}
+        except Exception as e:
+            error_msg = str(e)
+            if self.llm.model != self.llm.fallback_model:
+                print(f"⚠️ Ошибка: {error_msg[:100]}")
+                self.llm.switch_model(self.llm.fallback_model)
+                self.executor = self._create_executor()
+                try:
+                    result = self.executor.invoke({"input": full_input})
+                    return {"response": result["output"], "duration": time.time() - start}
+                except Exception as e2:
+                    return {"response": f"❌ Резервная тоже недоступна: {str(e2)[:200]}",
+                            "duration": time.time() - start}
+            return {"response": f"❌ {error_msg[:200]}", "duration": time.time() - start}
 
     def clear(self):
         self.memory.clear()

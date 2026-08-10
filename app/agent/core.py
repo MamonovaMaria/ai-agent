@@ -10,7 +10,15 @@ from app.rag.retriever import RAGRetriever
 from app.tools import ALL_TOOLS
 
 PROMPT = ChatPromptTemplate.from_messages([
-    ("system", "You are a helpful AI assistant. Answer in Russian. Use tools when you need real data."),
+    ("system", """You are a helpful AI assistant. Answer in Russian.
+
+When user asks about their bookmarks:
+1. Call search_bookmarks ONCE with the user's query
+2. Read the results
+3. Give a summary based ONLY on those results
+4. Do NOT call any other tools for bookmark questions
+
+For other questions, use the appropriate tool ONCE and answer."""),
     MessagesPlaceholder(variable_name="chat_history"),
     ("human", "{input}"),
     MessagesPlaceholder(variable_name="agent_scratchpad"),
@@ -26,12 +34,12 @@ class Agent:
         self.executor = self._create_executor()
 
     def _create_executor(self):
-        print(f"DEBUG _create_executor: llm.model = {self.llm.model}")
         agent = create_tool_calling_agent(self.llm, self.tools, PROMPT)
         return AgentExecutor(
             agent=agent, tools=self.tools, memory=self.memory.memory,
             verbose=Config.verbose, handle_parsing_errors=True,
-            max_iterations=Config.max_iterations, max_execution_time=120,
+            max_iterations=3,
+            max_execution_time=60,
         )
 
     def chat(self, message: str) -> dict:

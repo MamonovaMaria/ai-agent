@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+.idea/
+.venv/
+*.pyc
+data/vector_db/
+*.jsonl
+*.npy

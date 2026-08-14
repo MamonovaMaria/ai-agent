@@ -1,3 +1,4 @@
+import os
 import time
 
 from langchain.agents import AgentExecutor, create_tool_calling_agent
@@ -38,8 +39,8 @@ class Agent:
         return AgentExecutor(
             agent=agent, tools=self.tools, memory=self.memory.memory,
             verbose=Config.verbose, handle_parsing_errors=True,
-            max_iterations=3,
-            max_execution_time=60,
+            max_iterations=Config.max_iterations,
+            max_execution_time=int(os.getenv("MAX_EXECUTION_TIME", "120")),
         )
 
     def chat(self, message: str) -> dict:

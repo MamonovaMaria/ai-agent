@@ -6,7 +6,13 @@ _rag = RAGRetriever()
 
 @tool
 def index_bookmarks(path: str = "bookmarks.html") -> str:
-    """Индексирует закладки."""
+    """Индексирует закладки (названия и URL)."""
+    result = _rag.index(path, download=False)  # без скачивания
+    return f"Проиндексировано {result['indexed']} из {result['total']}"
+
+@tool
+def index_bookmarks_full(path: str = "bookmarks.html") -> str:
+    """Индексирует закладки вместе с содержимым сайтов (медленно)."""
     result = _rag.index(path, download=True)
     return f"Проиндексировано {result['indexed']} из {result['total']} (скачано: {result['downloaded']})"
 

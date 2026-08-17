@@ -1,7 +1,11 @@
 from langchain.tools import tool
 from pathlib import Path
 
+from app.tools.utils import log_tool_call
+
+
 @tool
+@log_tool_call
 def read_file(path: str) -> str:
     """Читает файл или показывает содержимое директории."""
     p = Path(path)
@@ -16,6 +20,7 @@ def read_file(path: str) -> str:
     return f"```{p.suffix[1:]}\n{c[:3000]}\n```"
 
 @tool
+@log_tool_call
 def count_files(directory: str = ".", extension: str = "") -> str:
     """Подсчёт файлов в директории."""
     p = Path(directory)
@@ -24,6 +29,7 @@ def count_files(directory: str = ".", extension: str = "") -> str:
     return f"Файлов: {len(files)}"
 
 @tool
+@log_tool_call
 def create_file(path: str, content: str = "") -> str:
     """Создаёт файл."""
     p = Path(path)

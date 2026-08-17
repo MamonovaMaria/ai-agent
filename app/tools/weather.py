@@ -1,8 +1,11 @@
 from langchain.tools import tool
 import requests
 from app.config import Config
+from app.tools.utils import log_tool_call
+
 
 @tool
+@log_tool_call
 def get_weather(city: str) -> str:
     """Погода в городе через OpenWeatherMap."""
     if not Config.weather_key: return "Нет ключа"

@@ -1,8 +1,11 @@
 from langchain.tools import tool
 import requests
 from app.config import Config
+from app.tools.utils import log_tool_call
+
 
 @tool
+@log_tool_call
 def slack_channels() -> str:
     """Каналы Slack."""
     if not Config.slack_token: return "Нет токена"
@@ -15,6 +18,7 @@ def slack_channels() -> str:
 
 
 @tool
+@log_tool_call
 def slack_send(channel: str, text: str) -> str:
     """Отправляет сообщение в Slack-канал. channel — название канала (например, #general), text — текст сообщения."""
     if not Config.slack_token:

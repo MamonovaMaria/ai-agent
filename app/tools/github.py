@@ -5,8 +5,11 @@ import subprocess
 import requests
 from langchain.tools import tool
 
+from app.tools.utils import log_tool_call
+
 
 @tool
+@log_tool_call
 def github_trending(language: str = "") -> str:
     """Популярные репозитории GitHub. Можно указать язык: python, javascript, go."""
     url = f"https://github.com/trending/{language}?since=daily" if language else "https://github.com/trending?since=daily"
@@ -29,6 +32,7 @@ def github_trending(language: str = "") -> str:
 
 
 @tool
+@log_tool_call
 def git_commit(
         message: str,
         files: str = ".",

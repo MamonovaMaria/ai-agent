@@ -1,7 +1,11 @@
 from langchain.tools import tool
 import requests, re, json
 
+from app.tools.utils import log_tool_call
+
+
 @tool
+@log_tool_call
 def habr_articles(query: str = "") -> str:
     """Статьи с Habr."""
     r = requests.get("https://habr.com/ru/feed/", headers={"User-Agent":"Mozilla/5.0"}, timeout=15)

@@ -101,8 +101,10 @@ class Agent:
             except (EOFError, KeyboardInterrupt):
                 print("\n👋")
                 break
-            if not msg: continue
-            if msg in ("выход", "exit"): print("👋"); break
+            if not msg:
+                continue
+            if msg in ("выход", "exit"):
+                print("👋"); break
             if msg.startswith("/model ") or msg.startswith("переключись на модель "):
                 new_model = msg[7:].strip() if msg.startswith("/model ") else msg[len("переключись на модель "):].strip()
                 if self.llm.switch_model(new_model):

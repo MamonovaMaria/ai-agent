@@ -5,6 +5,7 @@ load_dotenv()
 
 
 class Config:
+    ollama_host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
     openrouter_key = os.getenv("OPENROUTER_API_KEY", "")
     openrouter_base = "https://openrouter.ai/api/v1"
     primary_model = os.getenv("PRIMARY_MODEL", "openai/gpt-4o-mini")

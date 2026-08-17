@@ -8,8 +8,10 @@ from langchain_core.messages import HumanMessage
 from app.config import Config
 from app.llm import FallbackLLM
 from app.memory.persistent_store import PersistentMemory
+from app.middleware.tracked_summarization import TrackedSummarizationMiddleware
 from app.rag.retriever import RAGRetriever
 from app.tools import ALL_TOOLS
+from app.utils import ConsoleColor
 
 SYSTEM_PROMPT = """You are a helpful AI assistant. Answer in Russian.
 
@@ -51,6 +53,12 @@ class Agent:
             max_tokens_before_summary=2000,
             max_tokens_after_summary=500,
         )
+
+        # self.summarization = TrackedSummarizationMiddleware(
+        #     model=self.llm,
+        #     max_tokens_before_summary=2000,
+        #     max_tokens_after_summary=500,
+        # )
 
         self.executor = self._create_executor()
 
@@ -114,5 +122,23 @@ class Agent:
             print("🤖 ", end="", flush=True)
             r = self.chat(msg)
             print(r["response"])
+
+            # stats = self.summarization.get_stats()
+            # print(f"{ConsoleColor.BLUE}   📝 Сжатий: {stats['summarizations']} "
+            #       f"(сэкономлено {stats['tokens_before'] - stats['tokens_after']} токенов) {ConsoleColor.RESET}")
+
+            # Информация о токенах
+            if hasattr(self.llm, 'last_token_usage') and self.llm.last_token_usage:
+                usage = self.llm.last_token_usage
+
+                cache_read = usage.get("prompt_tokens_details", {}).get("cached_tokens", 0)
+                cache_write = usage.get("cache_creation", 0)
+                input_tokens = usage.get("prompt_tokens", 0)
+                output_tokens = usage.get("completion_tokens", 0)
+                total = usage.get("total_tokens", input_tokens + output_tokens)
+
+                print(f"{ConsoleColor.BLUE}   🔤 Токены: {total} (вход: {input_tokens}, выход: {output_tokens}, "
+                      f"кэш: {cache_read}R/{cache_write}W) {ConsoleColor.RESET}")
+
             if r["duration"]:
                 print(f"   ⏱️ {r['duration']:.1f}с\n")

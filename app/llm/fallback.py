@@ -5,11 +5,12 @@ from app.config import Config
 
 class FallbackLLM(ChatOpenAI):
     """LLM с fallback на резервную модель."""
-    
+
     primary_model: str = Config.primary_model
     fallback_model: str = Config.fallback_model
     current_model: str = Config.primary_model
     model: str = Config.primary_model
+    last_token_usage: dict = {}
 
     def __init__(self, **kwargs):
         super().__init__(
@@ -22,14 +23,26 @@ class FallbackLLM(ChatOpenAI):
         )
         self._current_model = Config.primary_model
 
+    def invoke(self, *args, **kwargs):
+        """Перехват ответа для извлечения token usage."""
+        response = super().invoke(*args, **kwargs)
+
+        usage = {}
+        if response and hasattr(response, 'response_metadata'):
+            meta = response.response_metadata or {}
+            usage = meta.get("token_usage") or {}
+
+        object.__setattr__(self, 'last_token_usage', usage)
+        return response
+
     def _is_recoverable(self, error: str) -> bool:
         recoverable = [
             "rate_limit", "overloaded", "server_error",
             "503", "502", "500",
             "timeout", "unavailable", "capacity",
-            "not a valid model",  # несуществующая модель
-            "not found",  # 404
-            "invalid_request",  # 400
+            "not a valid model",
+            "not found",
+            "invalid_request",
         ]
         return any(msg in error.lower() for msg in recoverable)
 
@@ -40,4 +53,4 @@ class FallbackLLM(ChatOpenAI):
         return True
 
     def get_current_model(self) -> str:
-        return self.current_model
+        return self._current_model

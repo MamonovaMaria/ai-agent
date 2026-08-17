@@ -12,5 +12,5 @@ class Config:
     weather_key = os.getenv("OPENWEATHER_API_KEY", "")
     slack_token = os.getenv("SLACK_BOT_TOKEN", "")
     verbose = os.getenv("VERBOSE", "true").lower() == "true"  # для отображения промежуточных рассуждений
-    # verbose = os.getenv("VERBOSE", "false").lower() == "true"
-    max_iterations = int(os.getenv("MAX_ITERATIONS", "5"))
+    max_iterations = int(os.getenv("MAX_ITERATIONS", "15"))
+    max_execution_time = int(os.getenv("MAX_EXECUTION_TIME", "120"))

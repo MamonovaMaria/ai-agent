@@ -1,1 +1,1 @@
-from app.memory.store import MemoryStore
+from app.memory.persistent_store import PersistentMemory
